@@ -9,7 +9,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -23,7 +22,7 @@ func init() {
 	buf := make([]byte, 1)
 	_, err := io.ReadFull(rand.Reader, buf)
 	if err != nil {
-		log.Panicf("crypto/rand is unavailable: Read() failed with %#v", err)
+		log.Panicf("Package crypto/rand is unavailable: Read() failed with %#v", err)
 	}
 	// initialize special character slice
 	special = make([]byte, 95)
@@ -74,13 +73,23 @@ func logIt(r *http.Request) {
 
 func helpHandler(w http.ResponseWriter, r *http.Request) {
 	logIt(r)
-	t, err := template.ParseFiles("html/help.html")
-	if err != nil {
-		log.Panic(err)
-	}
-	if err = t.Execute(w, &data{Title: "Random Number and String Generator", Host: r.Host}); err != nil {
-		log.Panic(err)
-	}
+	const page = `
+		<!DOCTYPE html>
+		<title>%v</title>
+		<h1>%v</h1>
+		<p><b>Usage:</b> %v/<i>command</i>/<i>length</i></p>
+		<div>Commands:</div>
+		<ul>
+			<li>number: numerical characters</li>
+			<li>alpha: alphabetical characters</li>
+			<li>alphanum: alphabetical and numerical characters</li>
+			<li>special: any 7-bit printable characters</li>
+			<li>any: any 8-bit characters URL-safe base64-encoded</li>
+		</ul>
+		<div>Default length is 32</div>
+	`
+	const title = "Random Number and String Generator"
+	fmt.Fprintf(w, page, title, title, r.Host)
 }
 
 func generalHandler(w http.ResponseWriter, r *http.Request, chars []byte) {
