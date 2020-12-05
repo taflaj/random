@@ -20,8 +20,7 @@ func init() {
 	log.SetFlags(log.Flags() | log.Lmicroseconds) // I like this particular log format
 	// assert that a cryptographically secure PRNG is available
 	buf := make([]byte, 1)
-	_, err := io.ReadFull(rand.Reader, buf)
-	if err != nil {
+	if _, err := io.ReadFull(rand.Reader, buf); err != nil {
 		log.Panicf("Package crypto/rand is unavailable: Read() failed with %#v", err)
 	}
 	// initialize special character slice
@@ -35,10 +34,9 @@ func init() {
 // It will return an error if the system's secure random
 // number generator fails to function correctly, in which
 // case the caller should not continue.
-func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b) // note that err == nil only if we read len(b) bytes
-	if err != nil {
+func GenerateRandomBytes(length int) ([]byte, error) {
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil { // note that err == nil only if we read len(b) bytes
 		return nil, err
 	}
 	return b, nil
@@ -48,16 +46,16 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 // It will return an error if the system's secure random
 // number generator fails to function correctly, in which
 // case the caller should not continue.
-func GenerateRandomString(chars []byte, length int) (string, error) {
+func GenerateRandomString(domain []byte, length int) (string, error) {
 	bytes, err := GenerateRandomBytes(length)
 	if err != nil {
 		return "", err
 	}
-	if chars == nil { // all bytes: encode it
+	if domain == nil { // all bytes: encode it
 		return base64.URLEncoding.EncodeToString(bytes), nil
 	}
 	for i, b := range bytes {
-		bytes[i] = chars[b%byte(len(chars))]
+		bytes[i] = domain[b%byte(len(domain))]
 	}
 	return string(bytes), nil
 }
